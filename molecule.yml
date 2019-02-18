@@ -1,0 +1,41 @@
+---
+scenario:
+  name: default
+driver:
+  name: delegated
+  qemu_path: /usr/bin/qemu-system-x86_64  
+  images_path: /var/lib/libvirt/images
+platforms:
+  - name: debian9
+    base_image: http://cdimage.debian.org/cdimage/openstack/9.7.0/debian-9.7.0-openstack-amd64.qcow2
+  - name: centos7
+    ram: 1024
+    cpu: 2
+    user: cloud-user
+    config_vm: false
+    become_method: sudo
+    become_pass: password
+    selinux_relabel: true
+    ssh_pub: /tmp/centos_key.pub
+    base_image: ~/Downloads/CentOS-7-x86_64-GenericCloud.qcow2
+provisioner:
+  name: ansible
+  playbooks:
+    create: files/create.yml
+    destroy: files/destroy.yml
+    converge: playbook.yml
+  lint:
+    name: ansible-lint
+lint:
+  name: yamllint
+scenario:
+  name: default
+verifier:
+  name: testinfra
+  directory: ./test
+  env:
+    PYTHONWARNINGS: "ignore:.*U.*mode is deprecated:DeprecationWarning"
+  lint:
+    name: flake8
+  options:
+    v: 1

@@ -1,0 +1,15 @@
+---
+- name: Destroy
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: call instance deletion job
+      include_tasks: destroy_vm.yml 
+      loop: "{{ molecule_yml.platforms }}"
+      no_log: true
+
+    - name: remove instance config from disk
+      file:
+        path: "{{ molecule_instance_config }}"
+        state: absent

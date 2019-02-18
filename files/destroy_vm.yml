@@ -1,0 +1,17 @@
+---
+- name: shutdown instance
+  virt:
+    name: "mlcl-{{ item.name }}"
+    state: destroyed
+  failed_when: false
+
+- name: remove instance
+  virt:
+    name: "mlcl-{{ item.name }}"
+    command: undefine
+  failed_when: false
+
+- name: delete instance image
+  file:
+    path: "{{ molecule_yml.driver.images_path }}/mlcl-{{ item.name }}.qcow2"
+    state: absent
