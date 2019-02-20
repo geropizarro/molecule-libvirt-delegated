@@ -103,7 +103,7 @@
   set_fact:
     instance_dict: "{{ instance_dict|combine({
       'become_method':item.become_method|
-          default(molecule_yml.driver.become_method)|default('su'),
+         default(molecule_yml.driver.become_method)|default('su'),
       'become_pass':root_pass })}}"
   when: config_vm or item.become_method is defined or item.become_pass is defined
   no_log: true

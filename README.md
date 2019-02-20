@@ -1,16 +1,13 @@
-An implementation of Molecule's delegated driver to leverage an existing libvirt daemon. It's meant to be used with preconfigured  KVM images or generic cloud images such as these:
+An implementation of Molecule's delegated driver to leverage an existing libvirt daemon. It's meant to be used with preconfigured  custom images or [generic cloud images such as these](https://docs.openstack.org/image-guide/obtain-images.html).
 
-https://docs.openstack.org/image-guide/obtain-images.html
-
-It's currently required to install the included **delegated.py** script since the delegated driver does not support ansible_become variables. PR was submitted and approved though not merged yet:
-
-https://github.com/ansible/molecule/pull/1738
+It is necessary to install the included **delegated.py** script since the delegated driver does not currently support the ansible_become variables required for testing scenarios where escalation is needed. [PR was submitted and approved](https://github.com/ansible/molecule/pull/1738) though not yet merged.
 
 
 Assumptions
 -----------
 
 - Functioning libvirt daemon on the default qemu:///system uri.
+- The libguestfs-tools package providing virt-customize is installed.
 - Appropriate permissions for the user running Molecule on the libvirt daemon, directories, etc.
 
 
@@ -51,14 +48,14 @@ Platform Variables
 | become_pass     | string | none, optional    | password for privilege escalation if using preconfigured image   |
 
 
-molecule.yml
-------------
+Example molecule.yml
+--------------------
 
-The molecule.yml file included shows an example with:
+The example below shows:
 
 - The minimum required configuration for the driver.
 - One platform with minimum required configuration using all the defaults (debian9).
-- One platform showing all the possible configurable parameters (centos7).
+- One platform with all the possible configurable parameters (centos7).
 
 ```
 scenario:

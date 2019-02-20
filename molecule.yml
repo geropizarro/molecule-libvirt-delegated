@@ -6,18 +6,9 @@ driver:
   qemu_path: /usr/bin/qemu-system-x86_64  
   images_path: /var/lib/libvirt/images
 platforms:
-  - name: debian9
-    base_image: http://cdimage.debian.org/cdimage/openstack/9.7.0/debian-9.7.0-openstack-amd64.qcow2
   - name: centos7
-    ram: 1024
-    cpu: 2
-    user: cloud-user
-    config_vm: false
-    become_method: sudo
-    become_pass: password
     selinux_relabel: true
-    ssh_pub: /tmp/centos_key.pub
-    base_image: ~/Downloads/CentOS-7-x86_64-GenericCloud.qcow2
+    base_image: https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2
 provisioner:
   name: ansible
   playbooks:
