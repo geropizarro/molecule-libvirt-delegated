@@ -1,0 +1,12 @@
+---
+- hosts: localhost
+  gather_facts: false
+  vars_files:
+    - var.json
+  tasks:
+    - debug:
+        msg: "{{ reported_devices|to_json|
+          from_json|json_query(jq)|flatten|first }}"
+      vars:
+        jq: "[*].ips[?version=='v4' && 
+          !ends_with(address,'.0.1')].address"
