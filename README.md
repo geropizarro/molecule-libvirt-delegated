@@ -45,6 +45,7 @@ Platform Variables
 | selinux_relabel | bool   | false             | required for SELinux-enabled images if config_vm is done         | 
 | ram             | int    | 512               | memory in MB as positive integer                                 |
 | cpu             | int    | 1                 | number of vCPU as positive integer                               |
+| extra_vol       | hash   | none, optional    | extra disk(s) to be attached to the VM with size including unit  |
 | become_pass     | string | none, optional    | password for privilege escalation if using preconfigured image   |
 
 
@@ -66,10 +67,11 @@ driver:
   images_path: /var/lib/libvirt/images
 platforms:
   - name: debian9
-    base_image: http://cdimage.debian.org/cdimage/openstack/9.7.0/debian-9.7.0-openstack-amd64.qcow2
+    base_image: https://cdimage.debian.org/cdimage/openstack/current-9/debian-9-openstack-amd64.qcow2
   - name: centos7
     ram: 1024
     cpu: 2
+    extra_vol: {'vdb':'1G','vdc':'512M'}
     user: cloud-user
     config_vm: false
     become_method: sudo

@@ -1,15 +1,15 @@
 ---
-- name: set some required instance facts
-  set_fact:
+- set_fact:
     config_vm: "{{ item.config_vm|default(true) }}"
     vm_user: "{{ item.user|default(lookup('env','USER')) }}"
-    img_path: "{{ molecule_yml.driver.images_path }}/mlcl-{{ item.name }}.qcow2"
+    img_path: "{{ molecule_yml.driver.images_path }}/{{ vm_name }}.qcow2"
     selinux_relabel: "{{ item.selinux_relabel|default(false) }}"
     ssh_pub: "{{ item.ssh_pub_path|default(molecule_yml.driver.ssh_pub_path)|
       default(lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
-    root_pass: "{{ item.become_pass|default(lookup('password','/dev/null 
-      length=16 chars=ascii_letters')) }}"
-    down_path: "{{ molecule_yml.driver.download_path|default(lookup('env','HOME')) }}"
+    root_pass: "{{ item.become_pass|default(lookup('password',
+      '/dev/null length=16 chars=ascii_letters')) }}"
+    down_path: "{{ molecule_yml.driver.download_path|
+      default(lookup('env','HOME')) }}"
 
 - name: check if the instance image exists
   stat:
@@ -61,18 +61,18 @@
 
     - name: create the instace
       virt:
-        name: "mlcl-{{ item.name }}"
+        name: "{{ vm_name }}"
         command: define
         xml: "{{ lookup('template', 'vm.xml.j2') }}"
   when: not img_stat.stat.exists
 
 - name: ensure the instance is running
   virt:
-    name: "mlcl-{{ item.name }}"
+    name: "{{ vm_name }}"
     state: running
 
 - name: get the IP
-  shell: "virsh domifaddr mlcl-{{ item.name }} | grep ipv4 | awk '{print $4}'"
+  shell: "virsh domifaddr {{ vm_name }} | grep ipv4 | awk '{print $4}'"
   register: ip_out
   until: ip_out.stdout_lines|length > 0
   delay: 3
@@ -88,6 +88,18 @@
     port: 22
     host: "{{ ip_out.stdout_lines[0][:-3] }}"
     search_regex: OpenSSH
+
+- name: attach additional disks
+  shell: |
+    truncate -s {{ disk.value }} {{ img_path[:-6] }}-{{ disk.key }}.img
+    virsh attach-disk {{ vm_name }} {{ img_path[:-6] }}-{{ disk.key }}.img \
+    {{ disk.key }} --driver qemu --subdriver raw --targetbus virtio --persistent
+  loop: "{{ query('dict', item.extra_vol|default({})) }}"
+  loop_control:
+    loop_var: disk
+  environment:
+    LIBVIRT_DEFAULT_URI: "qemu:///system"
+  when: item.extra_vol is defined
 
 - name: create the basic instance hash
   set_fact:
@@ -108,6 +120,6 @@
   when: config_vm or item.become_method is defined or item.become_pass is defined
   no_log: true
 
-- name: add instance hash to main instances dictionary
+- name: add instance to instances dictionary
   set_fact:
     instance_conf_dict: "{{ instance_conf_dict|default([]) + [ instance_dict ] }}"
