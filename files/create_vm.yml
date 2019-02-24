@@ -1,5 +1,6 @@
 ---
-- set_fact:
+- name: set instance variables
+  set_fact:
     config_vm: "{{ item.config_vm|default(true) }}"
     vm_user: "{{ item.user|default(lookup('env','USER')) }}"
     img_path: "{{ molecule_yml.driver.images_path }}/{{ vm_name }}.qcow2"
