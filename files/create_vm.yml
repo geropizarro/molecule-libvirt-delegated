@@ -28,7 +28,7 @@
         - name: download base image
           get_url:
             url: "{{ item.base_image }}"
-            dest: "{{ down_path }}" 
+            dest: "{{ down_path }}"
           when: not down_stat.stat.exists
 
         - name: make a copy of the base image to use with this instance
@@ -45,16 +45,16 @@
 
     - name: configure instance image
       shell: >
-        virt-customize -a {{ img_path }} 
-        --run-command 'mkdir -p /etc/cloud && touch 
-        /etc/cloud/cloud-init.disabled && useradd 
-        -m {{ vm_user }} && ssh-keygen -A' 
-        --ssh-inject {{ vm_user }}:file:{{ ssh_pub }} 
+        virt-customize -a {{ img_path }}
+        --run-command 'mkdir -p /etc/cloud && touch
+        /etc/cloud/cloud-init.disabled && useradd
+        -m {{ vm_user }} && ssh-keygen -A'
+        --ssh-inject {{ vm_user }}:file:{{ ssh_pub }}
         --root-password password:{{ root_pass }}
       register: virt_cust
       when: config_vm
       no_log: true
-      
+
     - name: run selinux-relabel
       shell: "virt-customize -a {{ img_path }} --selinux-relabel"
       when: selinux_relabel

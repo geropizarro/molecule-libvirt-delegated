@@ -5,9 +5,9 @@
   gather_facts: false
   tasks:
     - name: call instance deletion job
-      include_tasks: destroy_vm.yml 
+      include_tasks: files/destroy_vm.yml
       vars:
-        vm_name: "mlcl-{{ item.name }}" 
+        vm_name: "mlcl-{{ item.name }}"
       loop: "{{ molecule_yml.platforms }}"
       no_log: true
 

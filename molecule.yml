@@ -3,7 +3,7 @@ scenario:
   name: default
 driver:
   name: delegated
-  qemu_path: /usr/bin/qemu-system-x86_64  
+  qemu_path: /usr/bin/qemu-system-x86_64
   images_path: /var/lib/libvirt/images
 platforms:
   - name: centos7
@@ -12,18 +12,15 @@ platforms:
 provisioner:
   name: ansible
   playbooks:
-    create: files/create.yml
-    destroy: files/destroy.yml
+    create: create.yml
+    destroy: destroy.yml
     converge: playbook.yml
   lint:
     name: ansible-lint
 lint:
   name: yamllint
-scenario:
-  name: default
 verifier:
   name: testinfra
-  directory: ./test
   env:
     PYTHONWARNINGS: "ignore:.*U.*mode is deprecated:DeprecationWarning"
   lint:

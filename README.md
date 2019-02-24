@@ -82,18 +82,15 @@ platforms:
 provisioner:
   name: ansible
   playbooks:
-    create: files/create.yml
-    destroy: files/destroy.yml
+    create: create.yml
+    destroy: destroy.yml
     converge: playbook.yml
   lint:
     name: ansible-lint
 lint:
   name: yamllint
-scenario:
-  name: default
 verifier:
   name: testinfra
-  directory: ./test
   env:
     PYTHONWARNINGS: "ignore:.*U.*mode is deprecated:DeprecationWarning"
   lint:
