@@ -5,13 +5,14 @@
   gather_facts: false
   tasks:
     - name: call instance creation job
-      include_tasks: files/create_vm.yml
+      ansible.builtin.include_tasks: files/create_vm.yml
       vars:
         vm_name: "mlcl-{{ item.name }}"
       loop: "{{ molecule_yml.platforms }}"
       no_log: true
 
     - name: dump instance config to disk
-      copy:
+      ansible.builtin.copy:
         content: "{{ instance_conf_dict }}"
         dest: "{{ molecule_instance_config }}"
+        mode: 0644

@@ -47,6 +47,7 @@ Platform Variables
 | cpu             | int    | 1                 | number of vCPU as positive integer                               |
 | extra_vol       | hash   | none, optional    | extra disk(s) to be attached to the VM with size including unit  |
 | become_pass     | string | none, optional    | password for privilege escalation if using preconfigured image   |
+| upload_files    | dict   | []                | list with upload items with `local_path` and `remote_path`       |
 
 
 Example molecule.yml
@@ -79,22 +80,19 @@ platforms:
     selinux_relabel: true
     ssh_pub: /tmp/centos_key.pub
     base_image: ~/Downloads/CentOS-7-x86_64-GenericCloud.qcow2
-provisioner:
-  name: ansible
+scenario:
   playbooks:
     create: create.yml
     destroy: destroy.yml
-    converge: playbook.yml
-  lint:
-    name: ansible-lint
-lint:
-  name: yamllint
+    converge: converge.yml
+provisioner:
+  name: ansible
+lint: |
+    yamllint .
+    ansible-lint .
+    flake8 .
 verifier:
   name: testinfra
   env:
     PYTHONWARNINGS: "ignore:.*U.*mode is deprecated:DeprecationWarning"
-  lint:
-    name: flake8
-  options:
-    v: 1
 ```
