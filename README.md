@@ -90,12 +90,9 @@ platforms:
     selinux_relabel: true
     ssh_pub: /tmp/centos_key.pub
     base_image: ~/Downloads/CentOS-7-x86_64-GenericCloud.qcow2
-<<<<<<< HEAD
     upload_files:
       - local_path: files/somefile
         remote_path: /some/destination/folder/filename
-=======
->>>>>>> d6d12bf (copy files option has been added + lint and deprication changes)
 scenario:
   playbooks:
     create: create.yml

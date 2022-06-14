@@ -8,15 +8,12 @@ platforms:
   - name: centos7
     selinux_relabel: true
     base_image: https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2
-<<<<<<< HEAD
   - name: ubuntu2004
     config_vm: True
     base_image: https://cloud-images.ubuntu.com/releases/focal/release/ubuntu-20.04-server-cloudimg-amd64-disk-kvm.img
     upload_files:
       - local_path: files/50-cloud-init.yaml
         remote_path: /etc/netplan/50-cloud-init.yaml
-=======
->>>>>>> d6d12bf (copy files option has been added + lint and deprication changes)
 scenario:
   playbooks:
     create: create.yml
