@@ -1,6 +1,13 @@
-An implementation of Molecule's delegated driver to leverage an existing libvirt daemon. It's meant to be used with preconfigured  custom images or [generic cloud images such as these](https://docs.openstack.org/image-guide/obtain-images.html).
+An implementation of Molecule's delegated driver to leverage an existing
+libvirt daemon. It's meant to be used with preconfigured  custom images or
+generic cloud images
+[such as these](https://docs.openstack.org/image-guide/obtain-images.html).
 
-It is necessary to install the included **delegated.py** script since the delegated driver does not currently support the ansible_become variables required for testing scenarios where escalation is needed. [PR was submitted and approved](https://github.com/ansible/molecule/pull/1738) though not yet merged.
+It is necessary to install the included **delegated.py** script since the
+delegated driver does not currently support the ansible_become variables
+required for testing scenarios where escalation is needed. 
+[PR was submitted and approved](https://github.com/ansible/molecule/pull/1738)
+though not yet merged.
 
 
 Assumptions
@@ -8,13 +15,16 @@ Assumptions
 
 - Functioning libvirt daemon on the default qemu:///system uri.
 - The libguestfs-tools package providing virt-customize is installed.
-- Appropriate permissions for the user running Molecule on the libvirt daemon, directories, etc.
+- Appropriate permissions for the user running Molecule on the libvirt daemon, 
+directories, etc.
 
 
 Common Variables
 -----------------
 
-These can be set at the driver and platform levels. At the driver level they apply to every platform, unless set also at the platform level, which takes precendence.
+These can be set at the driver and platform levels. At the driver level they
+apply to every platform, unless set also at the platform level, which takes
+precendence.
 
 | Variable      | Type   | Default                 | Comment                                                        |
 |---------------|--------|-------------------------|----------------------------------------------------------------|
@@ -80,6 +90,9 @@ platforms:
     selinux_relabel: true
     ssh_pub: /tmp/centos_key.pub
     base_image: ~/Downloads/CentOS-7-x86_64-GenericCloud.qcow2
+    upload_files:
+      - local_path: files/somefile
+        remote_path: /some/destination/folder/filename
 scenario:
   playbooks:
     create: create.yml
@@ -96,3 +109,15 @@ verifier:
   env:
     PYTHONWARNINGS: "ignore:.*U.*mode is deprecated:DeprecationWarning"
 ```
+
+Changelog
+---------
+
+**2022.06.14:**
+
+- Copy file(s) to virtual machine image option has been added: e.g. Canonical
+[cloud images](https://cloud-images.ubuntu.com/releases/) (like Ubuntu18.04 or
+20.04) ships without netplan config to bring up ethernet interfaces, so you can
+upload them.
+- Minor code style changes according to ansible-lint, removed deprecated
+options (especially molecule.yml old structure).
