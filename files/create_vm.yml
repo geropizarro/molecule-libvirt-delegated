@@ -1,19 +1,19 @@
 ---
 - name: set instance variables
-  set_fact:
-    config_vm: "{{ item.config_vm|default(true) }}"
-    vm_user: "{{ item.user|default(lookup('env','USER')) }}"
+  ansible.builtin.set_fact:
+    config_vm: "{{ item.config_vm | default(true) }}"
+    vm_user: "{{ item.user | default(lookup('env', 'USER')) }}"
     img_path: "{{ molecule_yml.driver.images_path }}/{{ vm_name }}.qcow2"
-    selinux_relabel: "{{ item.selinux_relabel|default(false) }}"
-    ssh_pub: "{{ item.ssh_pub_path|default(molecule_yml.driver.ssh_pub_path)|
-      default(lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
-    root_pass: "{{ item.become_pass|default(lookup('password',
+    selinux_relabel: "{{ item.selinux_relabel | default(false) }}"
+    ssh_pub: "{{ item.ssh_pub_path | default(molecule_yml.driver.ssh_pub_path) |
+      default(lookup('env', 'HOME') + '/.ssh/id_rsa.pub') }}"
+    root_pass: "{{ item.become_pass | default(lookup('password',
       '/dev/null length=16 chars=ascii_letters')) }}"
-    down_path: "{{ molecule_yml.driver.download_path|
-      default(lookup('env','HOME')) }}"
+    down_path: "{{ molecule_yml.driver.download_path |
+      default(lookup('env', 'HOME')) }}"
 
 - name: check if the instance image exists
-  stat:
+  ansible.builtin.stat:
     path: "{{ img_path }}"
   register: img_stat
 
@@ -22,30 +22,41 @@
     - name: deal with a URL given as base image
       block:
         - name: check if image was already downloaded
-          stat:
-            path: "{{ down_path }}/{{ item.base_image|basename }}"
+          ansible.builtin.stat:
+            path: "{{ down_path }}/{{ item.base_image | basename }}"
           register: down_stat
 
         - name: download base image
-          get_url:
+          ansible.builtin.get_url:
             url: "{{ item.base_image }}"
             dest: "{{ down_path }}"
+            mode: 0644
           when: not down_stat.stat.exists
 
         - name: make a copy of the base image to use with this instance
           synchronize:
-            src: "{{ down_path }}/{{ item.base_image|basename }}"
+            src: "{{ down_path }}/{{ item.base_image | basename }}"
             dest: "{{ img_path }}"
-      when: item.base_image|regex_search('^http')
+      when: item.base_image | regex_search('^http')
 
     - name: make a copy of the base image to use with this instance
       synchronize:
         src: "{{ item.base_image }}"
         dest: "{{ img_path }}"
-      when: not item.base_image|regex_search('^http')
+      when: not (item.base_image | regex_search('^http'))
 
-    - name: configure instance image
-      shell: >
+    - name: upload files to image   # noqa 305
+      ansible.builtin.shell: >
+        virt-customize -a {{ img_path }} --upload
+        {{ file_item.local_path }}:{{ file_item.remote_path }}
+      with_items:
+        - "{{ item.upload_files }}"
+      loop_control:
+        loop_var: file_item
+      when: item.upload_files is defined
+
+    - name: configure instance image   # noqa 305
+      ansible.builtin.shell: >
         virt-customize -a {{ img_path }}
         --run-command 'mkdir -p /etc/cloud && touch
         /etc/cloud/cloud-init.disabled && useradd
@@ -56,13 +67,13 @@
       when: config_vm
       no_log: true
 
-    - name: run selinux-relabel
-      shell: "virt-customize -a {{ img_path }} --selinux-relabel"
+    - name: run selinux-relabel   # noqa 305
+      ansible.builtin.shell: >
+        virt-customize -a {{ img_path }} --selinux-relabel
       when: selinux_relabel
 
     - name: create the instace
       virt:
-        name: "{{ vm_name }}"
         command: define
         xml: "{{ lookup('template', 'vm.xml.j2') }}"
   when: not img_stat.stat.exists
@@ -72,8 +83,9 @@
     name: "{{ vm_name }}"
     state: running
 
-- name: get the IP
-  shell: "virsh domifaddr {{ vm_name }} | grep ipv4 | awk '{print $4}'"
+- name: get the IP   # noqa risky-shell-pipe 305
+  ansible.builtin.shell: >
+    virsh domifaddr {{ vm_name }} | grep ipv4 | awk '{print $4}'
   register: ip_out
   until: ip_out.stdout_lines|length > 0
   delay: 3
@@ -83,7 +95,7 @@
     LIBVIRT_DEFAULT_URI: "qemu:///system"
 
 - name: wait until the instance can be reached over SSH
-  wait_for:
+  ansible.builtin.wait_for:
     delay: 0
     sleep: 3
     port: 22
@@ -91,11 +103,11 @@
     search_regex: OpenSSH
 
 - name: attach additional disks
-  shell: |
+  ansible.builtin.shell: |
     truncate -s {{ disk.value }} {{ img_path[:-6] }}-{{ disk.key }}.img
     virsh attach-disk {{ vm_name }} {{ img_path[:-6] }}-{{ disk.key }}.img \
     {{ disk.key }} --driver qemu --subdriver raw --targetbus virtio --persistent
-  loop: "{{ query('dict', item.extra_vol|default({})) }}"
+  loop: "{{ query('dict', item.extra_vol | default({})) }}"
   loop_control:
     loop_var: disk
   environment:
@@ -103,24 +115,26 @@
   when: item.extra_vol is defined
 
 - name: create the basic instance hash
-  set_fact:
-    instance_dict: "{{ instance_dict|default({})|combine({
-      'user':vm_user,
-      'instance':item.name,
-      'address':ip_out.stdout_lines[0][:-3],
-      'port':item.port|default('22'),
-      'identity_file':item.id_file|default(
-         lookup('env','HOME') + '/.ssh/id_rsa') })}}"
+  ansible.builtin.set_fact:
+    instance_dict: "{{ instance_dict | default({}) | combine({
+      'user': vm_user,
+      'instance': item.name,
+      'address': ip_out.stdout_lines[0][:-3],
+      'port': item.port | default('22'),
+      'identity_file': item.id_file | default(
+         lookup('env', 'HOME') + '/.ssh/id_rsa') }) }}"
 
 - name: include become details in hash
-  set_fact:
-    instance_dict: "{{ instance_dict|combine({
-      'become_method':item.become_method|
-         default(molecule_yml.driver.become_method)|default('su'),
-      'become_pass':root_pass })}}"
-  when: config_vm or item.become_method is defined or item.become_pass is defined
+  ansible.builtin.set_fact:
+    instance_dict: "{{ instance_dict | combine({
+      'become_method': item.become_method |
+         default(molecule_yml.driver.become_method) | default('su'),
+      'become_pass': root_pass }) }}"
+  when: config_vm or item.become_method is defined or
+    item.become_pass is defined
   no_log: true
 
 - name: add instance to instances dictionary
-  set_fact:
-    instance_conf_dict: "{{ instance_conf_dict|default([]) + [ instance_dict ] }}"
+  ansible.builtin.set_fact:
+    instance_conf_dict: "{{ instance_conf_dict |
+      default([]) + [ instance_dict ] }}"
