@@ -12,6 +12,6 @@
       no_log: true
 
     - name: remove instance config from disk
-      file:
+      ansible.builtin.file:
         path: "{{ molecule_instance_config }}"
         state: absent

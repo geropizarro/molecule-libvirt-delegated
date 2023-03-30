@@ -1,3 +1,4 @@
 *pycache*
 *.pyc
 *.sw*
+.idea

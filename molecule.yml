@@ -1,6 +1,5 @@
 ---
-scenario:
-  name: default
+
 driver:
   name: delegated
   qemu_path: /usr/bin/qemu-system-x86_64
@@ -9,21 +8,29 @@ platforms:
   - name: centos7
     selinux_relabel: true
     base_image: https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2
-provisioner:
-  name: ansible
+  - name: ubuntu2004
+    config_vm: True
+    base_image: https://cloud-images.ubuntu.com/releases/focal/release/ubuntu-20.04-server-cloudimg-amd64-disk-kvm.img
+    upload_files:
+      - local_path: files/50-cloud-init.yaml
+        remote_path: /etc/netplan/50-cloud-init.yaml
+scenario:
   playbooks:
     create: create.yml
     destroy: destroy.yml
-    converge: playbook.yml
-  lint:
-    name: ansible-lint
-lint:
-  name: yamllint
+    converge: converge.yml
+provisioner:
+  name: ansible
+  env:
+    PY_COLORS: '1'
+    ANSIBLE_FORCE_COLOR: '1'
+lint: |
+    export PY_COLORS=1
+    export ANSIBLE_FORCE_COLOR=1
+    yamllint .
+    ansible-lint .
+    flake8 .
 verifier:
   name: testinfra
   env:
     PYTHONWARNINGS: "ignore:.*U.*mode is deprecated:DeprecationWarning"
-  lint:
-    name: flake8
-  options:
-    v: 1
